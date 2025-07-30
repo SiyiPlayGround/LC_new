@@ -1,0 +1,77 @@
+
+3625. You are given a 2D integer array points where points[i] = [xi, yi] represents the coordinates of the ith point on the Cartesian plane.
+Return the number of unique trapezoids that can be formed by choosing any four distinct points from points.
+A trapezoid is a convex quadrilateral with at least one pair of parallel sides. Two lines are parallel if and only if they have the same slope.
+public class Solution {
+   public int gcd(int a, int b) {
+    while (b != 0) {
+      int tmp = a % b;
+      a = b;
+      b = tmp;
+    }
+    return Math.abs(a);
+  }
+  public String hash(int a, int b) {
+    int g = gcd(Math.abs(a), Math.abs(b));
+    if (g == 0) {
+      return "0/0";
+    }
+    int num = a / g;
+    int den = b / g;
+    String sign = (num * den < 0 && den != 0) ? "-" : "";
+    return sign + Math.abs(num) + "/" + Math.abs(den);
+  }
+  public int countTrapezoids(int[][] points) {
+    int n = points.length;
+    int trapeziums = 0;
+    Map<String, Integer> parallel = new HashMap<>();
+    Map<String, Integer> collinear = new HashMap<>();
+
+    for (int i = 0; i < n; i++) {
+      int[] p2 = points[i];
+      for (int j = 0; j < i; j++) {
+        int[] p1 = points[j];
+        String slope = (p1[0] != p2[0])
+          ? hash(p2[1] - p1[1], p2[0] - p1[0])
+          : "infinity";
+        String intercept = (p1[0] != p2[0])
+          ? hash(p1[1] * (p2[0] - p1[0]) - (p2[1] - p1[1]) * p1[0],
+                 p2[0] - p1[0])
+          : p1[0] + "";
+        String h = slope + "," + intercept;
+        trapeziums += parallel.getOrDefault(slope, 0)
+                    - collinear.getOrDefault(h, 0);
+        parallel.put(slope, parallel.getOrDefault(slope, 0) + 1);
+        collinear.put(h, collinear.getOrDefault(h, 0) + 1);
+      }
+    }
+
+    int parallelograms = 0;
+    Map<String, Integer> parallelDist = new HashMap<>();
+    Map<String, Integer> collinearDist = new HashMap<>();
+
+    for (int i = 0; i < n; i++) {
+      int[] p2 = points[i];
+      for (int j = 0; j < i; j++) {
+        int[] p1 = points[j];
+        String slope = (p1[0] != p2[0])
+          ? hash(p2[1] - p1[1], p2[0] - p1[0])
+          : "infinity";
+        String intercept = (p1[0] != p2[0])
+          ? hash(p1[1] * (p2[0] - p1[0]) - (p2[1] - p1[1]) * p1[0],
+                 p2[0] - p1[0])
+          : p1[0] + "";
+        int dist = (p1[0] - p2[0]) * (p1[0] - p2[0])
+                 + (p1[1] - p2[1]) * (p1[1] - p2[1]);
+        String h1 = slope + "," + dist;
+        String h2 = slope + "," + intercept + "," + dist;
+        parallelograms += parallelDist.getOrDefault(h1, 0)
+                        - collinearDist.getOrDefault(h2, 0);
+        parallelDist.put(h1, parallelDist.getOrDefault(h1, 0) + 1);
+        collinearDist.put(h2, collinearDist.getOrDefault(h2, 0) + 1);
+      }
+    }
+    return trapeziums - parallelograms / 2;
+  }
+
+}
